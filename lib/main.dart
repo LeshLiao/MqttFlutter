@@ -1,11 +1,14 @@
 // main.dart
 
 import 'package:flutter/material.dart';
+import 'MQTTClientWrapper.dart';
 import 'card_model.dart';
 import 'api_service.dart';
 
 void main() {
   runApp(const MyApp());
+  MQTTClientWrapper newclient = new MQTTClientWrapper();
+  newclient.prepareMqttClient();
 }
 
 class MyApp extends StatelessWidget {
