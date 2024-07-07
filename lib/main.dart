@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:flutter/material.dart';
 import 'MQTTClientWrapper.dart';
 import 'card_model.dart';
@@ -7,8 +5,6 @@ import 'api_service.dart';
 
 void main() {
   runApp(const MyApp());
-  MQTTClientWrapper newclient = new MQTTClientWrapper();
-  newclient.prepareMqttClient();
 }
 
 class MyApp extends StatelessWidget {
@@ -38,11 +34,20 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   late Future<List<CardModel>> futureCards;
+  String mqttMessage = '';
+
+  final MQTTClientWrapper mqttClientWrapper = MQTTClientWrapper();
 
   @override
   void initState() {
     super.initState();
     futureCards = ApiService.fetchCards();
+    mqttClientWrapper.onMessageReceived = (String message) {
+      setState(() {
+        mqttMessage = message;
+      });
+    };
+    mqttClientWrapper.prepareMqttClient();
   }
 
   @override
@@ -53,53 +58,60 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: FutureBuilder<List<CardModel>>(
-          future: futureCards,
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              List<CardModel>? cards = snapshot.data;
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(
-                      label: SizedBox(
-                        width: 80, // Set the desired fixed width for "Create Time"
-                        child: Text('Create Time', style: TextStyle(fontSize: 12)),
-                      ),
-                    ),
-                    DataColumn(
-                      label: SizedBox(
-                        width: 100, // Set the desired fixed width for "Card ID"
-                        child: Text('Card ID', style: TextStyle(fontSize: 12)),
-                      ),
-                    ),
-                    DataColumn(label: Text('Card Data', style: TextStyle(fontSize: 12))),
-                  ],
-                  rows: cards!.map((card) {
-                    return DataRow(cells: [
-                      DataCell(
-                        SizedBox(
-                          width: 80, // Set the same fixed width for the cell
-                          child: Text(card.formattedCreatedAt, style: const TextStyle(fontSize: 12)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            FutureBuilder<List<CardModel>>(
+              future: futureCards,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  List<CardModel>? cards = snapshot.data;
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: DataTable(
+                      columns: const [
+                        DataColumn(
+                          label: SizedBox(
+                            width: 80, // Set the desired fixed width for "Create Time"
+                            child: Text('Create Time', style: TextStyle(fontSize: 12)),
+                          ),
                         ),
-                      ),
-                      DataCell(
-                        SizedBox(
-                          width: 100, // Set the same fixed width for the cell
-                          child: Text(card.cardId, style: const TextStyle(fontSize: 12)),
+                        DataColumn(
+                          label: SizedBox(
+                            width: 100, // Set the desired fixed width for "Card ID"
+                            child: Text('Card ID', style: TextStyle(fontSize: 12)),
+                          ),
                         ),
-                      ),
-                      DataCell(Text(card.cardData, style: const TextStyle(fontSize: 12))),
-                    ]);
-                  }).toList(),
-                ),
-              );
-            } else if (snapshot.hasError) {
-              return Text("Error: ${snapshot.error}");
-            }
-            return const CircularProgressIndicator();
-          },
+                        DataColumn(label: Text('Card Data', style: TextStyle(fontSize: 12))),
+                      ],
+                      rows: cards!.map((card) {
+                        return DataRow(cells: [
+                          DataCell(
+                            SizedBox(
+                              width: 80, // Set the same fixed width for the cell
+                              child: Text(card.formattedCreatedAt, style: const TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                          DataCell(
+                            SizedBox(
+                              width: 100, // Set the same fixed width for the cell
+                              child: Text(card.cardId, style: const TextStyle(fontSize: 12)),
+                            ),
+                          ),
+                          DataCell(Text(card.cardData, style: const TextStyle(fontSize: 12))),
+                        ]);
+                      }).toList(),
+                    ),
+                  );
+                } else if (snapshot.hasError) {
+                  return Text("Error: ${snapshot.error}");
+                }
+                return const CircularProgressIndicator();
+              },
+            ),
+            const SizedBox(height: 20),
+            Text('MQTT Message: $mqttMessage', style: TextStyle(fontSize: 16)),
+          ],
         ),
       ),
     );
