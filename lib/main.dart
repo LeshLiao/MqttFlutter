@@ -59,15 +59,35 @@ class _MyHomePageState extends State<MyHomePage> {
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
                   columns: const [
-                    DataColumn(label: Text('Create Time')),
-                    DataColumn(label: Text('Card ID')),
-                    DataColumn(label: Text('Card Data')),
+                    DataColumn(
+                      label: SizedBox(
+                        width: 80, // Set the desired fixed width for "Create Time"
+                        child: Text('Create Time', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                    DataColumn(
+                      label: SizedBox(
+                        width: 100, // Set the desired fixed width for "Card ID"
+                        child: Text('Card ID', style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                    DataColumn(label: Text('Card Data', style: TextStyle(fontSize: 12))),
                   ],
                   rows: cards!.map((card) {
                     return DataRow(cells: [
-                      DataCell(Text(card.formattedCreatedAt)),
-                      DataCell(Text(card.cardId)),
-                      DataCell(Text(card.cardData)),
+                      DataCell(
+                        SizedBox(
+                          width: 80, // Set the same fixed width for the cell
+                          child: Text(card.formattedCreatedAt, style: const TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                      DataCell(
+                        SizedBox(
+                          width: 100, // Set the same fixed width for the cell
+                          child: Text(card.cardId, style: const TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                      DataCell(Text(card.cardData, style: const TextStyle(fontSize: 12))),
                     ]);
                   }).toList(),
                 ),
