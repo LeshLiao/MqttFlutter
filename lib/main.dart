@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:percent_indicator/percent_indicator.dart';
 import 'MQTTClientWrapper.dart';
 import 'card_model.dart';
 import 'api_service.dart';
@@ -35,6 +36,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late Future<List<CardModel>> futureCards;
   String mqttMessage = '';
+  String temperature = '';
+  String humidity = '';
 
   final MQTTClientWrapper mqttClientWrapper = MQTTClientWrapper();
 
@@ -45,13 +48,41 @@ class _MyHomePageState extends State<MyHomePage> {
     mqttClientWrapper.onMessageReceived = (String message) {
       setState(() {
         mqttMessage = message;
+        _parseMqttMessage(mqttMessage);
       });
     };
     mqttClientWrapper.prepareMqttClient();
   }
 
+  void _parseMqttMessage(String message) {
+    final regex = RegExp(r'Temperature:\s(\d+)\sC,\sHumidity:\s(\d+)\s%');
+    final match = regex.firstMatch(message);
+    if (match != null) {
+      setState(() {
+        temperature = match.group(1) ?? '';
+        humidity = match.group(2) ?? '';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    double temperatureValue = 0.0;
+    double humidityValue = 0.0;
+    try {
+      temperatureValue = double.parse(temperature);
+    } catch (e) {
+      // Handle the case where temperature is not a valid double
+      temperatureValue = 0.0;
+    }
+    try {
+      humidityValue = double.parse(humidity);
+    } catch (e) {
+      // Handle the case where humidity is not a valid double
+      humidityValue = 0.0;
+    }
+
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -61,6 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
+            Text('RFID Card', style: TextStyle(fontSize: 20)),
             FutureBuilder<List<CardModel>>(
               future: futureCards,
               builder: (context, snapshot) {
@@ -110,7 +142,34 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             const SizedBox(height: 20),
-            Text('MQTT Message: $mqttMessage', style: TextStyle(fontSize: 16)),
+            Text('MQTT Temperature', style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 10),
+            CircularPercentIndicator(
+              radius: 80.0,
+              lineWidth: 13.0,
+              animation: false,
+              percent: temperatureValue / 100,
+              center: Text(
+                '$temperatureValue°C',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+              ),
+              circularStrokeCap: CircularStrokeCap.round,
+              progressColor: Colors.purple,
+            ),
+            const SizedBox(height: 10),
+            Text('MQTT Humidity', style: TextStyle(fontSize: 18)),
+            CircularPercentIndicator(
+              radius: 80.0,
+              lineWidth: 13.0,
+              animation: false,
+              percent: humidityValue / 100,
+              center: Text(
+                '$humidityValue%',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20.0),
+              ),
+              circularStrokeCap: CircularStrokeCap.round,
+              progressColor: Colors.blue,
+            ),
           ],
         ),
       ),
