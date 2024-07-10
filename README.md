@@ -19,3 +19,6 @@ samples, guidance on mobile development, and a full API reference.
 
 # Raspberry Pico and DHT11 sensor
 [<img src="screenshot/pico.png" width="200"/>](pico.png)
+
+# RFID-RC522 Reader 
+[<img src="screenshot/RFID_Reader.png" width="200"/>](RFID_Reader.png)
